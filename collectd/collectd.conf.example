@@ -1,0 +1,49 @@
+# Example configuration for collectd to collect statistics
+# from dump1090.
+
+# Basic configuration of collectd, use whatever's suitable
+# for your system:
+Hostname "rpi.lxi"
+Interval 60
+Timeout 2
+ReadThreads 5
+WriteThreads 1
+
+LoadPlugin syslog
+<Plugin syslog>
+        LogLevel info
+</Plugin>
+
+# 
+# dump1090 configuration:
+#
+
+
+# Load the dump1090 types:
+TypesDB "/home/pi/git/dump1090-tools/dump1090.db"
+
+# Ensure that the base Python plugin is loaded:
+<LoadPlugin python>
+        Globals true
+</LoadPlugin>
+
+# Configure the dump1090 python module.
+#
+# Each Instance block collects statistics from a separate named dump1090.
+# The URL should be the base URL of the webmap, i.e. in the examples below,
+# statistics will be loaded from http://rpi.lxi:8081/data/stats.json etc.
+
+<Plugin python>
+        ModulePath "/home/pi/dump1090-tools/collectd"
+        LogTraces true
+        Import "dump1090"
+        <Module dump1090>
+                <Instance northwest>
+                        URL "http://rpi.lxi:8081"
+                </Instance>
+                <Instance southeast>
+                        URL "http://twopi.lxi:8081"
+                </Instance>
+        </Module>
+</Plugin>
+
