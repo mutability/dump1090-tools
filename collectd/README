@@ -2,3 +2,6 @@ This directory contains a collectd module that gathers statistics from
 a dump1090-mutability instance. It requires the collectd-python plugin.
 
 For an example config using it, see collectd.conf.example
+
+make-collectd-graphs.sh is an example script to generate graphs from
+the data collected by collectd.
