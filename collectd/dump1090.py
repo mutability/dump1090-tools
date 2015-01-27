@@ -45,29 +45,30 @@ def read_stats_1min(instance_name, host, url):
         stats = json.load(stats_file)
 
     # Signal measurements - from the 1 min bucket
-    V.dispatch(plugin_instance = instance_name,
-               host=host,
-               type='dump1090_dbfs',
-               type_instance='signal',
-               time=stats['last1min']['end'],
-               values = [stats['last1min']['local']['signal']],
-               interval = 60)
+    if stats['last1min'].has_key('local'):
+        V.dispatch(plugin_instance = instance_name,
+                   host=host,
+                   type='dump1090_dbfs',
+                   type_instance='signal',
+                   time=stats['last1min']['end'],
+                   values = [stats['last1min']['local']['signal']],
+                   interval = 60)
 
-    V.dispatch(plugin_instance = instance_name,
-               host=host,
-               type='dump1090_dbfs',
-               type_instance='peak_signal',
-               time=stats['last1min']['end'],
-               values = [stats['last1min']['local']['peak_signal']],
-               interval = 60)
+        V.dispatch(plugin_instance = instance_name,
+                   host=host,
+                   type='dump1090_dbfs',
+                   type_instance='peak_signal',
+                   time=stats['last1min']['end'],
+                   values = [stats['last1min']['local']['peak_signal']],
+                   interval = 60)
     
-    V.dispatch(plugin_instance = instance_name,
-               host=host,
-               type='dump1090_messages',
-               type_instance='strong_signals',
-               time=stats['last1min']['end'],
-               values = [stats['last1min']['local']['strong_signals']],
-               interval = 60)
+        V.dispatch(plugin_instance = instance_name,
+                   host=host,
+                   type='dump1090_messages',
+                   type_instance='strong_signals',
+                   time=stats['last1min']['end'],
+                   values = [stats['last1min']['local']['strong_signals']],
+                   interval = 60)
 
 
 def read_stats(instance_name, host, url):
@@ -75,36 +76,38 @@ def read_stats(instance_name, host, url):
         stats = json.load(stats_file)
 
     # Local message counts
-    counts = stats['total']['local']['accepted']
-    V.dispatch(plugin_instance = instance_name,
-               host=host,
-               type='dump1090_messages',
-               type_instance='local_accepted',
-               time=stats['total']['end'],
-               values = [sum(counts)])
-    for i in xrange(len(counts)):
+    if stats['total'].has_key('local'):
+        counts = stats['total']['local']['accepted']
         V.dispatch(plugin_instance = instance_name,
                    host=host,
                    type='dump1090_messages',
-                   type_instance='local_accepted_%d' % i,
+                   type_instance='local_accepted',
                    time=stats['total']['end'],
-                   values = [counts[i]])
+                   values = [sum(counts)])
+        for i in xrange(len(counts)):
+            V.dispatch(plugin_instance = instance_name,
+                       host=host,
+                       type='dump1090_messages',
+                       type_instance='local_accepted_%d' % i,
+                       time=stats['total']['end'],
+                       values = [counts[i]])
 
     # Remote message counts
-    counts = stats['total']['remote']['accepted']
-    V.dispatch(plugin_instance = instance_name,
-               host=host,
-               type='dump1090_messages',
-               type_instance='remote_accepted',
-               time=stats['total']['end'],
-               values = [sum(counts)])
-    for i in xrange(len(counts)):
+    if stats['total'].has_key('remote'):
+        counts = stats['total']['remote']['accepted']
         V.dispatch(plugin_instance = instance_name,
                    host=host,
                    type='dump1090_messages',
-                   type_instance='remote_accepted_%d' % i,
+                   type_instance='remote_accepted',
                    time=stats['total']['end'],
-                   values = [counts[i]])
+                   values = [sum(counts)])
+        for i in xrange(len(counts)):
+            V.dispatch(plugin_instance = instance_name,
+                       host=host,
+                       type='dump1090_messages',
+                       type_instance='remote_accepted_%d' % i,
+                       time=stats['total']['end'],
+                       values = [counts[i]])
 
     # CPU
     for k in stats['total']['cpu'].keys():
