@@ -109,6 +109,14 @@ def read_stats(instance_name, host, url):
                        time=stats['total']['end'],
                        values = [counts[i]])
 
+    # Position counts
+    V.dispatch(plugin_instance = instance_name,
+               host=host,
+               type='dump1090_messages',
+               type_instance='positions',
+               time=stats['total']['end'],
+               values = [stats['total']['cpr']['global_ok'] + stats['total']['cpr']['local_ok']])
+
     # CPU
     for k in stats['total']['cpu'].keys():
         V.dispatch(plugin_instance = instance_name,
