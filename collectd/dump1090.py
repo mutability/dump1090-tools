@@ -117,6 +117,20 @@ def read_stats(instance_name, host, url):
                time=stats['total']['end'],
                values = [stats['total']['cpr']['global_ok'] + stats['total']['cpr']['local_ok']])
 
+    # Tracks
+    V.dispatch(plugin_instance = instance_name,
+               host=host,
+               type='dump1090_tracks',
+               type_instance='all',
+               time=stats['total']['end'],
+               values = [stats['total']['tracks']['all']])
+    V.dispatch(plugin_instance = instance_name,
+               host=host,
+               type='dump1090_tracks',
+               type_instance='single_message',
+               time=stats['total']['end'],
+               values = [stats['total']['tracks']['single_message']])
+
     # CPU
     for k in stats['total']['cpu'].keys():
         V.dispatch(plugin_instance = instance_name,
