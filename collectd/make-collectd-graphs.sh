@@ -32,15 +32,15 @@ local_rate_graph() {
   --vertical-label "messages/second" \
   --lower-limit 0  \
   --units-exponent 0 \
-  --right-axis 0.1:0 \
+  --right-axis 360:0 \
   "DEF:messages=$2/dump1090_messages-local_accepted.rrd:value:AVERAGE" \
   "DEF:strong=$2/dump1090_messages-strong_signals.rrd:value:AVERAGE" \
   "DEF:positions=$2/dump1090_messages-positions.rrd:value:AVERAGE" \
-  "CDEF:y2strong=strong,0.1,/" \
-  "CDEF:y2positions=positions,0.1,/" \
+  "CDEF:y2strong=strong,10,*" \
+  "CDEF:y2positions=positions,10,*" \
   "LINE1:messages#0000FF:messages received" \
-  "AREA:y2strong#FF0000:messages over -3dBFS (right)" \
-  "LINE1:y2positions#00c0FF:position reports received (right)"
+  "AREA:y2strong#FF0000:messages over -3dBFS (hourly, RHS)" \
+  "LINE1:y2positions#00c0FF:position reports received (hourly, RHS)"
 }
 
 remote_rate_graph() {
@@ -53,12 +53,12 @@ remote_rate_graph() {
   --vertical-label "messages/second" \
   --lower-limit 0  \
   --units-exponent 0 \
-  --right-axis 0.1:0 \
+  --right-axis 360:0 \
   "DEF:messages=$2/dump1090_messages-remote_accepted.rrd:value:AVERAGE" \
   "DEF:positions=$2/dump1090_messages-positions.rrd:value:AVERAGE" \
-  "CDEF:y2positions=positions,0.1,/" \
+  "CDEF:y2positions=positions,10,*" \
   "LINE1:messages#0000FF:messages received" \
-  "LINE1:y2positions#00c0FF:position reports received (right)"
+  "LINE1:y2positions#00c0FF:position reports received (hourly, RHS)"
 }
 
 aircraft_graph() {
@@ -75,6 +75,24 @@ aircraft_graph() {
   "DEF:pos=$2/dump1090_aircraft-recent.rrd:positions:AVERAGE" \
   "AREA:all#00FF00:aircraft tracked" \
   "LINE1:pos#0000FF:aircraft with positions"
+}
+
+tracks_graph() {
+  rrdtool graph \
+  "$1" \
+  --start end-$4 \
+  --width 600 \
+  --height 200 \
+  --title "$3 tracks seen" \
+  --vertical-label "tracks/hour" \
+  --lower-limit 0 \
+  --units-exponent 0 \
+  "DEF:all=$2/dump1090_tracks-all.rrd:value:AVERAGE" \
+  "DEF:single=$2/dump1090_tracks-single_message.rrd:value:AVERAGE" \
+  "CDEF:hall=all,3600,*,1000,MIN" \
+  "CDEF:hsingle=single,3600,*,1000,MIN" \
+  "AREA:hall#00FF00:unique tracks" \
+  "LINE1:hsingle#FF0000:tracks with single message"
 }
 
 cpu_graph() {
@@ -139,6 +157,7 @@ machine_cpu_graph() {
 common_graphs() {
   aircraft_graph /var/www/collectd/dump1090-$2-acs-$4.png /var/lib/collectd/rrd/$1/dump1090-$2 "$3" "$4"
   cpu_graph /var/www/collectd/dump1090-$2-cpu-$4.png /var/lib/collectd/rrd/$1/dump1090-$2 "$3" "$4"
+  tracks_graph /var/www/collectd/dump1090-$2-tracks-$4.png /var/lib/collectd/rrd/$1/dump1090-$2 "$3" "$4"
 }
 
 # receiver_graphs host shortname longname
