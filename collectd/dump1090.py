@@ -3,6 +3,7 @@ import json, math
 from contextlib import closing
 from urllib2 import urlopen
 import urlparse
+import time
 
 def handle_config(root):
     for child in root.children:
@@ -30,6 +31,11 @@ def handle_config(root):
         
 V=collectd.Values(host='', plugin='dump1090', time=0)
 
+def T(provisional):
+    now = time.time()
+    if provisional <= now + 60: return provisional
+    else: return now
+
 def handle_read(data):
     instance_name,host,url = data
 
@@ -46,19 +52,21 @@ def read_stats_1min(instance_name, host, url):
 
     # Signal measurements - from the 1 min bucket
     if stats['last1min'].has_key('local'):
-        V.dispatch(plugin_instance = instance_name,
+        if stats['last1min']['local'].has_key('signal'):
+          V.dispatch(plugin_instance = instance_name,
                    host=host,
                    type='dump1090_dbfs',
                    type_instance='signal',
-                   time=stats['last1min']['end'],
+                   time=T(stats['last1min']['end']),
                    values = [stats['last1min']['local']['signal']],
                    interval = 60)
 
-        V.dispatch(plugin_instance = instance_name,
+        if stats['last1min']['local'].has_key('peak_signal'):
+          V.dispatch(plugin_instance = instance_name,
                    host=host,
                    type='dump1090_dbfs',
                    type_instance='peak_signal',
-                   time=stats['last1min']['end'],
+                   time=T(stats['last1min']['end']),
                    values = [stats['last1min']['local']['peak_signal']],
                    interval = 60)
     
@@ -66,7 +74,7 @@ def read_stats_1min(instance_name, host, url):
                    host=host,
                    type='dump1090_messages',
                    type_instance='strong_signals',
-                   time=stats['last1min']['end'],
+                   time=T(stats['last1min']['end']),
                    values = [stats['last1min']['local']['strong_signals']],
                    interval = 60)
 
@@ -82,14 +90,14 @@ def read_stats(instance_name, host, url):
                    host=host,
                    type='dump1090_messages',
                    type_instance='local_accepted',
-                   time=stats['total']['end'],
+                   time=T(stats['total']['end']),
                    values = [sum(counts)])
         for i in xrange(len(counts)):
             V.dispatch(plugin_instance = instance_name,
                        host=host,
                        type='dump1090_messages',
                        type_instance='local_accepted_%d' % i,
-                       time=stats['total']['end'],
+                       time=T(stats['total']['end']),
                        values = [counts[i]])
 
     # Remote message counts
@@ -99,14 +107,14 @@ def read_stats(instance_name, host, url):
                    host=host,
                    type='dump1090_messages',
                    type_instance='remote_accepted',
-                   time=stats['total']['end'],
+                   time=T(stats['total']['end']),
                    values = [sum(counts)])
         for i in xrange(len(counts)):
             V.dispatch(plugin_instance = instance_name,
                        host=host,
                        type='dump1090_messages',
                        type_instance='remote_accepted_%d' % i,
-                       time=stats['total']['end'],
+                       time=T(stats['total']['end']),
                        values = [counts[i]])
 
     # Position counts
@@ -114,7 +122,7 @@ def read_stats(instance_name, host, url):
                host=host,
                type='dump1090_messages',
                type_instance='positions',
-               time=stats['total']['end'],
+               time=T(stats['total']['end']),
                values = [stats['total']['cpr']['global_ok'] + stats['total']['cpr']['local_ok']])
 
     # Tracks
@@ -122,13 +130,13 @@ def read_stats(instance_name, host, url):
                host=host,
                type='dump1090_tracks',
                type_instance='all',
-               time=stats['total']['end'],
+               time=T(stats['total']['end']),
                values = [stats['total']['tracks']['all']])
     V.dispatch(plugin_instance = instance_name,
                host=host,
                type='dump1090_tracks',
                type_instance='single_message',
-               time=stats['total']['end'],
+               time=T(stats['total']['end']),
                values = [stats['total']['tracks']['single_message']])
 
     # CPU
@@ -137,7 +145,7 @@ def read_stats(instance_name, host, url):
                    host=host,
                    type='dump1090_cpu',
                    type_instance=k,
-                   time=stats['total']['end'],
+                   time=T(stats['total']['end']),
                    values = [stats['total']['cpu'][k]])
 
 def greatcircle(lat0, lon0, lat1, lon1):
