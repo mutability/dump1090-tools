@@ -1,0 +1,5 @@
+# m h  dom mon dow   command
+2,12,22,32,42,52 * * * *	/home/pi/make-collectd-graphs.sh 24h 180 >/dev/null
+4,24,44 * * * *			/home/pi/make-collectd-graphs.sh 7d 1200 >/dev/null
+6 * * *	*			/home/pi/make-collectd-graphs.sh 30d 5400 >/dev/null
+8 */12 * * *			/home/pi/make-collectd-graphs.sh 365d 86400 >/dev/null

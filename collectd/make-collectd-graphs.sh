@@ -6,8 +6,9 @@ signal_graph() {
   rrdtool graph \
   "$1" \
   --start end-$4 \
-  --width 600 \
+  --width 480 \
   --height 200 \
+  --step "$5" \
   --title "$3 signal" \
   --vertical-label "dBFS" \
   --upper-limit 0    \
@@ -26,8 +27,9 @@ local_rate_graph() {
   rrdtool graph \
   "$1" \
   --start end-$4 \
-  --width 600 \
+  --width 480 \
   --height 200 \
+  --step "$5" \
   --title "$3 message rate" \
   --vertical-label "messages/second" \
   --lower-limit 0  \
@@ -39,16 +41,17 @@ local_rate_graph() {
   "CDEF:y2strong=strong,10,*" \
   "CDEF:y2positions=positions,10,*" \
   "LINE1:messages#0000FF:messages received" \
-  "AREA:y2strong#FF0000:messages over -3dBFS (hourly, RHS)" \
-  "LINE1:y2positions#00c0FF:position reports received (hourly, RHS)"
+  "AREA:y2strong#FF0000:messages >-3dBFS / hr (RHS)" \
+  "LINE1:y2positions#00c0FF:positions / hr (RHS)"
 }
 
 remote_rate_graph() {
   rrdtool graph \
   "$1" \
   --start end-$4 \
-  --width 600 \
+  --width 480 \
   --height 200 \
+  --step "$5" \
   --title "$3 message rate" \
   --vertical-label "messages/second" \
   --lower-limit 0  \
@@ -58,15 +61,16 @@ remote_rate_graph() {
   "DEF:positions=$2/dump1090_messages-positions.rrd:value:AVERAGE" \
   "CDEF:y2positions=positions,10,*" \
   "LINE1:messages#0000FF:messages received" \
-  "LINE1:y2positions#00c0FF:position reports received (hourly, RHS)"
+  "LINE1:y2positions#00c0FF:position / hr (RHS)"
 }
 
 aircraft_graph() {
   rrdtool graph \
   "$1" \
   --start end-$4 \
-  --width 600 \
+  --width 480 \
   --height 200 \
+  --step "$5" \
   --title "$3 aircraft seen" \
   --vertical-label "aircraft" \
   --lower-limit 0 \
@@ -81,8 +85,9 @@ tracks_graph() {
   rrdtool graph \
   "$1" \
   --start end-$4 \
-  --width 600 \
+  --width 480 \
   --height 200 \
+  --step "$5" \
   --title "$3 tracks seen" \
   --vertical-label "tracks/hour" \
   --lower-limit 0 \
@@ -92,15 +97,16 @@ tracks_graph() {
   "CDEF:hall=all,3600,*,1000,MIN" \
   "CDEF:hsingle=single,3600,*,1000,MIN" \
   "AREA:hall#00FF00:unique tracks" \
-  "LINE1:hsingle#FF0000:tracks with single message"
+  "AREA:hsingle#FF0000:tracks with single message"
 }
 
 cpu_graph() {
   rrdtool graph \
   "$1" \
   --start end-$4 \
-  --width 600 \
+  --width 480 \
   --height 200 \
+  --step "$5" \
   --title "$3 CPU" \
   --vertical-label "CPU %" \
   --lower-limit 0 \
@@ -121,8 +127,9 @@ machine_cpu_graph() {
   rrdtool graph \
   "$1" \
   --start end-$4 \
-  --width 600 \
+  --width 480 \
   --height 200 \
+  --step "$5" \
   --title "$3 overall CPU" \
   --vertical-label "CPU / %" \
   --lower-limit 0 \
@@ -155,26 +162,27 @@ machine_cpu_graph() {
 }
 
 common_graphs() {
-  aircraft_graph /var/www/collectd/dump1090-$2-acs-$4.png /var/lib/collectd/rrd/$1/dump1090-$2 "$3" "$4"
-  cpu_graph /var/www/collectd/dump1090-$2-cpu-$4.png /var/lib/collectd/rrd/$1/dump1090-$2 "$3" "$4"
-  tracks_graph /var/www/collectd/dump1090-$2-tracks-$4.png /var/lib/collectd/rrd/$1/dump1090-$2 "$3" "$4"
+  aircraft_graph /var/www/collectd/dump1090-$2-acs-$4.png /var/lib/collectd/rrd/$1/dump1090-$2 "$3" "$4" "$5"
+  cpu_graph /var/www/collectd/dump1090-$2-cpu-$4.png /var/lib/collectd/rrd/$1/dump1090-$2 "$3" "$4" "$5"
+  tracks_graph /var/www/collectd/dump1090-$2-tracks-$4.png /var/lib/collectd/rrd/$1/dump1090-$2 "$3" "$4" "$5"
 }
 
-# receiver_graphs host shortname longname
+# receiver_graphs host shortname longname period step
 receiver_graphs() {
-  common_graphs "$1" "$2" "$3" "$4"
-  signal_graph /var/www/collectd/dump1090-$2-signal-$4.png /var/lib/collectd/rrd/$1/dump1090-$2 "$3" "$4"
-  local_rate_graph /var/www/collectd/dump1090-$2-rate-$4.png /var/lib/collectd/rrd/$1/dump1090-$2 "$3" "$4"
+  common_graphs "$1" "$2" "$3" "$4" "$5"
+  signal_graph /var/www/collectd/dump1090-$2-signal-$4.png /var/lib/collectd/rrd/$1/dump1090-$2 "$3" "$4" "$5"
+  local_rate_graph /var/www/collectd/dump1090-$2-rate-$4.png /var/lib/collectd/rrd/$1/dump1090-$2 "$3" "$4" "$5"
 }
 
 hub_graphs() {
-  common_graphs "$1" "$2" "$3" "$4"
-  remote_rate_graph /var/www/collectd/dump1090-$2-rate-$4.png /var/lib/collectd/rrd/$1/dump1090-$2 "$3" "$4"
-} 
+  common_graphs "$1" "$2" "$3" "$4" "$5"
+  remote_rate_graph /var/www/collectd/dump1090-$2-rate-$4.png /var/lib/collectd/rrd/$1/dump1090-$2 "$3" "$4" "$5"
+}
 
 period="$1"
+step="$2"
 
-receiver_graphs rpi.lxi northwest "Northwest antenna" "$period"
-receiver_graphs twopi.lxi southeast "Southeast antenna" "$period"
-hub_graphs rpi.lxi hub "Hub" "$period"
-machine_cpu_graph /var/www/collectd/machine-cpu-rpi-$period.png /var/lib/collectd/rrd/rpi.lxi/cpu-0 "rpi" "$period"
+receiver_graphs rpi.lxi northwest "Northwest antenna" "$period" "$step"
+receiver_graphs twopi.lxi southeast "Southeast antenna" "$period" "$step"
+hub_graphs rpi.lxi hub "Hub" "$period" "$step"
+machine_cpu_graph /var/www/collectd/machine-cpu-rpi-$period.png /var/lib/collectd/rrd/rpi.lxi/cpu-0 "rpi" "$period" "$step"
