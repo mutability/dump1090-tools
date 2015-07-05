@@ -199,6 +199,7 @@ def read_aircraft(instance_name, host, url):
     total = 0
     with_pos = 0
     max_range = 0
+    mlat = 0
     for a in aircraft_data['aircraft']:
         if a['seen'] < 15: total += 1        
         if a.has_key('seen_pos') and a['seen_pos'] < 15:
@@ -206,6 +207,8 @@ def read_aircraft(instance_name, host, url):
             if rlat is not None:
                 distance = greatcircle(rlat, rlon, a['lat'], a['lon'])
                 if distance > max_range: max_range = distance
+            if 'lat' in a.get('mlat', ()):
+                mlat += 1
 
     V.dispatch(plugin_instance = instance_name,
                host=host,
@@ -213,6 +216,12 @@ def read_aircraft(instance_name, host, url):
                type_instance='recent',
                time=aircraft_data['now'],
                values = [total, with_pos])
+    V.dispatch(plugin_instance = instance_name,
+               host=host,
+               type='dump1090_mlat',
+               type_instance='recent',
+               time=aircraft_data['now'],
+               values = [mlat])
 
     if max_range > 0:
         V.dispatch(plugin_instance = instance_name,
