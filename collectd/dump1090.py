@@ -1,7 +1,7 @@
 import collectd
 import json, math
 from contextlib import closing
-from urllib2 import urlopen
+from urllib2 import urlopen, URLError
 import urlparse
 import time
 
@@ -47,8 +47,11 @@ def handle_read_1min(data):
     read_stats_1min(instance_name, host, url);
     
 def read_stats_1min(instance_name, host, url):
-    with closing(urlopen(url + '/data/stats.json', None, 5.0)) as stats_file:
-        stats = json.load(stats_file)
+    try:
+        with closing(urlopen(url + '/data/stats.json', None, 5.0)) as stats_file:
+            stats = json.load(stats_file)
+    except URLError:
+        return
 
     # Signal measurements - from the 1 min bucket
     if stats['last1min'].has_key('local'):
@@ -80,8 +83,11 @@ def read_stats_1min(instance_name, host, url):
 
 
 def read_stats(instance_name, host, url):
-    with closing(urlopen(url + '/data/stats.json', None, 5.0)) as stats_file:
-        stats = json.load(stats_file)
+    try:
+        with closing(urlopen(url + '/data/stats.json', None, 5.0)) as stats_file:
+            stats = json.load(stats_file)
+    except URLError:
+        return
 
     # Local message counts
     if stats['total'].has_key('local'):
@@ -156,17 +162,21 @@ def greatcircle(lat0, lon0, lat1, lon1):
     return 6371e3 * math.acos(math.sin(lat0) * math.sin(lat1) + math.cos(lat0) * math.cos(lat1) * math.cos(abs(lon0 - lon1)))
 
 def read_aircraft(instance_name, host, url):
-    with closing(urlopen(url + '/data/receiver.json', None, 5.0)) as receiver_file:
-        receiver = json.load(receiver_file)
+    try:
+        with closing(urlopen(url + '/data/receiver.json', None, 5.0)) as receiver_file:
+            receiver = json.load(receiver_file)
 
-    if receiver.has_key('lat'):
-        rlat = float(receiver['lat'])
-        rlon = float(receiver['lon'])
-    else:
-        rlat = rlon = None
+        if receiver.has_key('lat'):
+            rlat = float(receiver['lat'])
+            rlon = float(receiver['lon'])
+        else:
+            rlat = rlon = None
 
-    with closing(urlopen(url + '/data/aircraft.json', None, 5.0)) as aircraft_file:
-        aircraft_data = json.load(aircraft_file)
+        with closing(urlopen(url + '/data/aircraft.json', None, 5.0)) as aircraft_file:
+            aircraft_data = json.load(aircraft_file)
+
+    except URLError:
+        return
 
     total = 0
     with_pos = 0
