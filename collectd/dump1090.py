@@ -72,6 +72,24 @@ def read_stats_1min(instance_name, host, url):
                    time=T(stats['last1min']['end']),
                    values = [stats['last1min']['local']['peak_signal']],
                    interval = 60)
+
+        if stats['last1min']['local'].has_key('min_signal'):
+          V.dispatch(plugin_instance = instance_name,
+                   host=host,
+                   type='dump1090_dbfs',
+                   type_instance='min_signal',
+                   time=T(stats['last1min']['end']),
+                   values = [stats['last1min']['local']['min_signal']],
+                   interval = 60)
+
+        if stats['last1min']['local'].has_key('noise'):
+          V.dispatch(plugin_instance = instance_name,
+                   host=host,
+                   type='dump1090_dbfs',
+                   type_instance='noise',
+                   time=T(stats['last1min']['end']),
+                   values = [stats['last1min']['local']['noise']],
+                   interval = 60)
     
         V.dispatch(plugin_instance = instance_name,
                    host=host,
